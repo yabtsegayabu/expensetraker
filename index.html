@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Addis Kitchen — Table Order</title>
+    <style>
+        :root {
+            --bg: #fdf8f3;
+            --card: #ffffff;
+            --ink: #2b1d12;
+            --muted: #8b7361;
+            --brand: #d97706;
+            --brand-dark: #b45309;
+            --green: #16a34a;
+            --line: #efe3d6;
+            --shadow: 0 4px 16px rgba(43, 29, 18, .08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            padding-bottom: 96px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* ---------- Topbar ---------- */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, .92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            display: grid;
+            place-items: center;
+            font-size: 22px;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, .25);
+        }
+
+        .brand h1 {
+            font-size: 17px;
+            margin: 0;
+            letter-spacing: -.2px;
+        }
+
+        .brand p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .table-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--brand);
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, .25);
+        }
+
+        .table-chip input {
+            width: 52px;
+            background: rgba(255, 255, 255, .22);
+            border: none;
+            outline: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            border-radius: 6px;
+            padding: 4px 6px;
+            text-align: center;
+        }
+
+        .table-chip input::placeholder {
+            color: rgba(255, 255, 255, .7);
+        }
+
+        .table-chip input:focus {
+            background: rgba(255, 255, 255, .4);
+        }
+
+        .table-chip input::-webkit-outer-spin-button,
+        .table-chip input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .table-chip input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* ---------- Categories ---------- */
+        .cats {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 14px 16px 6px;
+            scrollbar-width: none;
+        }
+
+        .cats::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat {
+            flex: 0 0 auto;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .cat.active {
+            background: var(--ink);
+            color: #fff;
+            border-color: var(--ink);
+        }
+
+        /* ---------- Menu ---------- */
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            padding: 12px 16px 24px;
+        }
+
+        .dish {
+            background: var(--card);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--line);
+            transition: .2s;
+        }
+
+        .dish:active {
+            transform: scale(.98);
+        }
+
+        .dish-emoji {
+            height: 96px;
+            display: grid;
+            place-items: center;
+            font-size: 46px;
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+        }
+
+        .dish-body {
+            padding: 10px 12px 12px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .dish-name {
+            font-weight: 700;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .dish-desc {
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.3;
+            min-height: 28px;
+            margin-top: 2px;
+        }
+
+        .dish-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+            padding-top: 8px;
+        }
+
+        .price {
+            font-weight: 700;
+            color: var(--brand-dark);
+            font-size: 14px;
+        }
+
+        .add {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: var(--brand);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 4px 10px rgba(217, 119, 6, .3);
+        }
+
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fef3e2;
+            border-radius: 999px;
+            padding: 2px;
+        }
+
+        .stepper button {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: none;
+            background: var(--brand);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            display: grid;
+            place-items: center;
+        }
+
+        .stepper span {
+            min-width: 14px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        /* ---------- Cart bar ---------- */
+        .cartbar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 25;
+            padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+            background: linear-gradient(180deg, rgba(253, 248, 243, 0), #fdf8f3 30%);
+        }
+
+        .cartbar-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--ink);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 15px;
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(43, 29, 18, .25);
+        }
+
+        .cartbar-count {
+            background: var(--brand);
+            color: #fff;
+            min-width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+        }
+
+        .cartbar-total {
+            margin-left: auto;
+            font-weight: 700;
+        }
+
+        .cartbar.empty .cartbar-btn {
+            opacity: .65;
+        }
+
+        /* ---------- Sheet (cart) ---------- */
+        .sheet {
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            display: none;
+        }
+
+        .sheet.open {
+            display: block;
+        }
+
+        .sheet-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(43, 29, 18, .5);
+            animation: fade .2s ease;
+        }
+
+        .sheet-panel {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            max-height: 88vh;
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp .25s cubic-bezier(.2, .8, .2, 1);
+            box-shadow: 0 -8px 30px rgba(43, 29, 18, .2);
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%)
+            }
+
+            to {
+                transform: translateY(0)
+            }
+        }
+
+        .sheet-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 18px 8px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .sheet-head h2 {
+            margin: 0;
+            font-size: 17px;
+        }
+
+        .icon-btn {
+            border: none;
+            background: #f5ede2;
+            color: var(--ink);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            font-size: 16px;
+        }
+
+        .sheet-body {
+            overflow-y: auto;
+            padding: 8px 16px;
+            flex: 1;
+        }
+
+        .empty {
+            text-align: center;
+            color: var(--muted);
+            padding: 40px 10px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .line {
+            display: grid;
+            grid-template-columns: 36px 1fr auto auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--line);
+        }
+
+        .line-emoji {
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .line-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .line-price {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .line-stepper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .line-stepper button {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--ink);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .line-stepper span {
+            min-width: 14px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .line-total {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--brand-dark);
+            min-width: 56px;
+            text-align: right;
+        }
+
+        .sheet-foot {
+            padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+            border-top: 1px solid var(--line);
+            background: #fff;
+        }
+
+        .totals {
+            background: #fef7ee;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .totals .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            color: var(--muted);
+        }
+
+        .totals .row.total {
+            color: var(--ink);
+            font-weight: 800;
+            font-size: 15px;
+            border-top: 1px dashed var(--line);
+            margin-top: 4px;
+            padding-top: 6px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            margin-top: 8px;
+            transition: .15s;
+        }
+
+        .btn-telegram {
+            background: #0088cc;
+            color: #fff;
+        }
+
+        .btn-telegram:hover {
+            background: #0077b5;
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+            color: #fff;
+        }
+
+        .btn-whatsapp:hover {
+            background: #1ebe5d;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 12.5px;
+            margin: 8px 0 0;
+            min-height: 16px;
+            font-weight: 600;
+        }
+
+        /* ---------- Toast ---------- */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 96px;
+            transform: translate(-50%, 20px);
+            background: var(--ink);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: .2s;
+            z-index: 50;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============ TOP BAR ============ -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="logo">🍽️</div>
+            <div>
+                <h1>Addis Kitchen</h1>
+                <p>Digital menu</p>
+            </div>
+        </div>
+        <label class="table-chip">
+            <span>Table</span>
+            <input type="number" id="tableNo" min="1" max="99" placeholder="#" inputmode="numeric">
+        </label>
+    </header>
+
+    <!-- ============ CATEGORY PILLS ============ -->
+    <nav class="cats" id="cats"></nav>
+
+    <!-- ============ MENU GRID ============ -->
+    <main class="menu" id="menu"></main>
+
+    <!-- ============ STICKY CART BAR ============ -->
+    <div class="cartbar" id="cartbar">
+        <button class="cartbar-btn" id="openCart">
+            <span class="cartbar-count" id="cartCount">0</span>
+            <span>View order</span>
+            <span class="cartbar-total" id="cartTotal">Br 0</span>
+        </button>
+    </div>
+
+    <!-- ============ CART SHEET ============ -->
+    <div class="sheet" id="sheet">
+        <div class="sheet-backdrop" data-close></div>
+        <div class="sheet-panel">
+            <div class="sheet-head">
+                <h2>Your Order</h2>
+                <button class="icon-btn" data-close aria-label="Close">✕</button>
+            </div>
+            <div class="sheet-body" id="cartList"></div>
+            <div class="sheet-foot">
+                <div class="totals" id="totals"></div>
+                <button class="btn btn-telegram" id="tgBtn">Send via Telegram</button>
+                <button class="btn btn-whatsapp" id="waBtn">Send via WhatsApp</button>
+                <button class="btn btn-ghost" id="clearBtn">Clear order</button>
+                <p class="status" id="status"></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /* ============================================================
+           1. CONFIG — EDIT THIS BLOCK
+           ============================================================ */
+        const CONFIG = {
+            restaurant: "Addis Kitchen",
+            telegramUser: "mina12344567",   // <-- without the @
+            whatsappNumber: "251935340105",             // <-- country code, NO '+'
+            serviceRate: 0.10,                       // 10% service charge
+            currency: "Br"
+        };
+
+        /* ============================================================
+           2. MENU — EDIT DISHES / PRICES HERE
+           ============================================================ */
+        const MENU = [
+            { id: "sambusa", name: "Sambusa (3 pcs)", desc: "Crispy lentil pastry", price: 60, cat: "starters", emoji: "🥟" },
+            { id: "azifa", name: "Azifa", desc: "Green lentil salad", price: 80, cat: "starters", emoji: "🥗" },
+            { id: "chechebsa", name: "Chechebsa", desc: "Spiced flatbread", price: 90, cat: "starters", emoji: "🫓" },
+
+            { id: "dorowat", name: "Doro Wat", desc: "Spicy chicken stew", price: 320, cat: "mains", emoji: "🍲" },
+            { id: "tibs", name: "Beef Tibs", desc: "Sautéed beef, onions", price: 280, cat: "mains", emoji: "🥘" },
+            { id: "kitfo", name: "Kitfo", desc: "Minced beef, mitmita", price: 300, cat: "mains", emoji: "🥩" },
+            { id: "beyaynetu", name: "Beyaynetu", desc: "Veggie combo platter", price: 220, cat: "mains", emoji: "🍛" },
+            { id: "shiro", name: "Shiro", desc: "Chickpea stew", price: 150, cat: "mains", emoji: "🥣" },
+            { id: "pasta", name: "Pasta", desc: "Spaghetti with sauce", price: 180, cat: "mains", emoji: "🍝" },
+
+            { id: "coffee", name: "Ethiopian Coffee", desc: "Freshly roasted", price: 60, cat: "drinks", emoji: "☕" },
+            { id: "macchiato", name: "Macchiato", desc: "Espresso with milk", price: 50, cat: "drinks", emoji: "🥛" },
+            { id: "juice", name: "Fresh Juice", desc: "Mango / avocado / papaya", price: 80, cat: "drinks", emoji: "🧃" },
+            { id: "water", name: "Bottled Water", desc: "500 ml", price: 25, cat: "drinks", emoji: "💧" },
+            { id: "soda", name: "Soft Drink", desc: "Coke, Sprite, Fanta", price: 35, cat: "drinks", emoji: "🥤" },
+
+            { id: "fruit", name: "Fruit Platter", desc: "Seasonal fruits", price: 120, cat: "desserts", emoji: "🍉" },
+            { id: "baklava", name: "Baklava", desc: "Honey pastry", price: 100, cat: "desserts", emoji: "🍯" }
+        ];
+
+        const CATS = [
+            { id: "all", label: "All" },
+            { id: "starters", label: "Starters" },
+            { id: "mains", label: "Mains" },
+            { id: "drinks", label: "Drinks" },
+            { id: "desserts", label: "Desserts" }
+        ];
+
+        /* ============================================================
+           3. STATE
+           ============================================================ */
+        const CART_KEY = "addis_cart_v1";
+        const TABLE_KEY = "addis_table_v1";
+
+        const TABLE_INPUT = document.getElementById("tableNo");
+        const MENU_EL = document.getElementById("menu");
+        const CATS_EL = document.getElementById("cats");
+        const CART_LIST = document.getElementById("cartList");
+        const CARTBAR = document.getElementById("cartbar");
+
+        let cart = {};
+        let activeCat = "all";
+
+        /* ============================================================
+           4. HELPERS
+           ============================================================ */
+        function money(n) { return CONFIG.currency + " " + n.toLocaleString(); }
+        function subtotal() {
+            return Object.entries(cart).reduce((sum, [id, q]) => {
+                const m = MENU.find(x => x.id === id);
+                return sum + (m ? m.price * q : 0);
+            }, 0);
+        }
+        function itemCount() {
+            return Object.values(cart).reduce((a, b) => a + b, 0);
+        }
+
+        /* ============================================================
+           5. STORAGE
+           ============================================================ */
+        function load() {
+            try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || {}; }
+            catch (e) { cart = {}; }
+            const t = localStorage.getItem(TABLE_KEY);
+            if (t) TABLE_INPUT.value = t;
+        }
+        function save() {
+            try {
+                localStorage.setItem(CART_KEY, JSON.stringify(cart));
+                localStorage.setItem(TABLE_KEY, TABLE_INPUT.value);
+            } catch (e) { }
+        }
+
+        /* ============================================================
+           6. RENDER: CATEGORIES
+           ============================================================ */
+        function renderCats() {
+            CATS_EL.innerHTML = CATS.map(c =>
+                `<button class="cat ${c.id === activeCat ? "active" : ""}" data-cat="${c.id}">${c.label}</button>`
+            ).join("");
+        }
+        CATS_EL.addEventListener("click", e => {
+            const b = e.target.closest(".cat");
+            if (!b) return;
+            activeCat = b.dataset.cat;
+            renderCats();
+            renderMenu();
+        });
+
+        /* ============================================================
+           7. RENDER: MENU
+           ============================================================ */
+        function renderMenu() {
+            const items = MENU.filter(m => activeCat === "all" || m.cat === activeCat);
+            MENU_EL.innerHTML = items.map(m => {
+                const qty = cart[m.id] || 0;
+                return `
+      <div class="dish">
+        <div class="dish-emoji">${m.emoji}</div>
+        <div class="dish-body">
+          <div class="dish-name">${m.name}</div>
+          <div class="dish-desc">${m.desc}</div>
+          <div class="dish-foot">
+            <span class="price">${money(m.price)}</span>
+            ${qty === 0
+                        ? `<button class="add" data-add="${m.id}" aria-label="Add">+</button>`
+                        : `<div class="stepper">
+                   <button data-dec="${m.id}" aria-label="Remove one">−</button>
+                   <span>${qty}</span>
+                   <button data-inc="${m.id}" aria-label="Add one">+</button>
+                 </div>`
+                    }
+          </div>
+        </div>
+      </div>`;
+            }).join("");
+        }
+        MENU_EL.addEventListener("click", e => {
+            const b = e.target.closest("button");
+            if (!b) return;
+            if (b.dataset.add) addItem(b.dataset.add, true);
+            else if (b.dataset.inc) addItem(b.dataset.inc, true);
+            else if (b.dataset.dec) decItem(b.dataset.dec);
+        });
+
+        /* ============================================================
+           8. RENDER: CART SHEET
+           ============================================================ */
+        function renderCart() {
+            const entries = Object.entries(cart);
+            if (entries.length === 0) {
+                CART_LIST.innerHTML = `<p class="empty">Your order is empty.<br>Tap a dish to add it 🍽️</p>`;
+                renderTotals();
+                return;
+            }
+            CART_LIST.innerHTML = entries.map(([id, qty]) => {
+                const m = MENU.find(x => x.id === id);
+                if (!m) return "";
+                return `
+      <div class="line">
+        <div class="line-emoji">${m.emoji}</div>
+        <div>
+          <div class="line-name">${m.name}</div>
+          <div class="line-price">${money(m.price)} × ${qty}</div>
+        </div>
+        <div class="line-stepper">
+          <button data-dec="${id}" aria-label="Minus">−</button>
+          <span>${qty}</span>
+          <button data-inc="${id}" aria-label="Plus">+</button>
+        </div>
+        <div class="line-total">${money(m.price * qty)}</div>
+      </div>`;
+            }).join("");
+            renderTotals();
+        }
+        CART_LIST.addEventListener("click", e => {
+            const b = e.target.closest("button");
+            if (!b) return;
+            if (b.dataset.inc) addItem(b.dataset.inc, false);
+            else if (b.dataset.dec) decItem(b.dataset.dec);
+        });
+
+        function renderTotals() {
+            const el = document.getElementById("totals");
+            const sub = subtotal();
+            if (sub === 0) { el.innerHTML = ""; return; }
+            const service = Math.round(sub * CONFIG.serviceRate);
+            el.innerHTML = `
+    <div class="row"><span>Subtotal</span><span>${money(sub)}</span></div>
+    <div class="row"><span>Service (${Math.round(CONFIG.serviceRate * 100)}%)</span><span>${money(service)}</span></div>
+    <div class="row total"><span>Total</span><span>${money(sub + service)}</span></div>
+  `;
+        }
+
+        /* ============================================================
+           9. CART ACTIONS
+           ============================================================ */
+        function addItem(id, toastIt) {
+            cart[id] = (cart[id] || 0) + 1;
+            save();
+            renderMenu();
+            renderCart();
+            updateBar();
+            if (toastIt) toast("Added to order ✓");
+        }
+        function decItem(id) {
+            if (!cart[id]) return;
+            cart[id]--;
+            if (cart[id] <= 0) delete cart[id];
+            save();
+            renderMenu();
+            renderCart();
+            updateBar();
+        }
+        function updateBar() {
+            const n = itemCount();
+            document.getElementById("cartCount").textContent = n;
+            document.getElementById("cartTotal").textContent = money(subtotal());
+            CARTBAR.classList.toggle("empty", n === 0);
+        }
+
+        /* ============================================================
+           10. SHEET OPEN/CLOSE
+           ============================================================ */
+        const SHEET = document.getElementById("sheet");
+        document.getElementById("openCart").onclick = () => {
+            renderCart();
+            SHEET.classList.add("open");
+        };
+        document.querySelectorAll("[data-close]").forEach(el => {
+            el.onclick = () => SHEET.classList.remove("open");
+        });
+
+        /* ============================================================
+           11. ORDER MESSAGE
+           ============================================================ */
+        function buildMessage() {
+            const table = TABLE_INPUT.value.trim();
+            const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            const lines = [
+                `🧾 NEW ORDER — ${CONFIG.restaurant}`,
+                `🍽️ Table: ${table}`,
+                `🕐 ${time}`,
+                `────────────────`
+            ];
+            Object.entries(cart).forEach(([id, qty]) => {
+                const m = MENU.find(x => x.id === id);
+                if (m) lines.push(`${qty}× ${m.name} — ${money(m.price * qty)}`);
+            });
+            lines.push(`────────────────`);
+            const sub = subtotal();
+            const service = Math.round(sub * CONFIG.serviceRate);
+            lines.push(`Subtotal: ${money(sub)}`);
+            lines.push(`Service (${Math.round(CONFIG.serviceRate * 100)}%): ${money(service)}`);
+            lines.push(`TOTAL: ${money(sub + service)}`);
+            return lines.join("\n");
+        }
+
+        /* ============================================================
+           12. VALIDATION + SEND
+           ============================================================ */
+        function validateOrder() {
+            const table = TABLE_INPUT.value.trim();
+            if (!table || +table < 1) {
+                toast("Enter your table number first");
+                TABLE_INPUT.focus();
+                return false;
+            }
+            if (Object.keys(cart).length === 0) {
+                toast("Add some dishes first 🍽️");
+                return false;
+            }
+            return true;
+        }
+        function setStatus(msg, color) {
+            const s = document.getElementById("status");
+            s.textContent = msg;
+            s.style.color = color;
+        }
+
+        document.getElementById("tgBtn").onclick = () => {
+            if (!validateOrder()) return;
+            const url = `https://t.me/${CONFIG.telegramUser}?text=${encodeURIComponent(buildMessage())}`;
+            window.open(url, "_blank");
+            setStatus("Opening Telegram… tap Send there to finish.", "#16a34a");
+        };
+
+        document.getElementById("waBtn").onclick = () => {
+            if (!validateOrder()) return;
+            const url = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(buildMessage())}`;
+            window.open(url, "_blank");
+            setStatus("Opening WhatsApp… tap Send there to finish.", "#16a34a");
+        };
+
+        document.getElementById("clearBtn").onclick = () => {
+            if (Object.keys(cart).length === 0) return;
+            if (!confirm("Clear the whole order?")) return;
+            cart = {};
+            save();
+            renderMenu();
+            renderCart();
+            updateBar();
+            setStatus("");
+            SHEET.classList.remove("open");
+        };
+
+        /* ============================================================
+           13. TOAST
+           ============================================================ */
+        let toastTimer;
+        function toast(msg) {
+            const t = document.getElementById("toast");
+            t.textContent = msg;
+            t.classList.add("show");
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove("show"), 1500);
+        }
+
+        /* ============================================================
+           14. PERSIST TABLE ON TYPE
+           ============================================================ */
+        TABLE_INPUT.addEventListener("input", save);
+
+        /* ============================================================
+           15. INIT
+           ============================================================ */
+        load();
+        renderCats();
+        renderMenu();
+        renderCart();
+        updateBar();
+    </script>
+
+</body>
+
+</html>
